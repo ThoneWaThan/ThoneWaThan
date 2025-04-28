@@ -12,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Function to check if the Telegram signature matches
 function checkTelegramAuth(data) {
   const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
   
@@ -25,22 +26,34 @@ function checkTelegramAuth(data) {
 app.get('/auth', (req, res) => {
   const data = req.query;
 
+  // Logging the incoming data
+  console.log("Received data:", data);
+
   if (!data.hash) {
+    console.log('Error: Missing hash in data.');
     return res.status(400).send('Missing hash.');
   }
 
+  // Check the signature
   if (checkTelegramAuth(data)) {
-    // Now it's safe to parse user
+    console.log("Signature verified successfully.");
+
+    // Now it’s safe to parse the user data
     let userInfo = {};
-    if (data.user) {
-      try {
+    try {
+      if (data.user) {
+        // Decode and parse the user data
         userInfo = JSON.parse(decodeURIComponent(data.user));
-      } catch (err) {
-        console.error('Failed to parse user data', err);
+        console.log("Parsed user data:", userInfo);
       }
+    } catch (err) {
+      console.error("Error parsing user data:", err);
     }
+
+    // Send a success message to the frontend
     res.send(`Hello ${userInfo.first_name || 'User'}, you are authenticated!`);
   } else {
+    console.log('Error: Authentication failed. Invalid signature.');
     res.status(403).send('Authentication failed.');
   }
 });
