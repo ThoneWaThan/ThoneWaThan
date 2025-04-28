@@ -26,8 +26,8 @@ function checkTelegramAuth(data) {
 app.get('/auth', (req, res) => {
   const data = req.query;
 
-  // Logging the incoming data
-  console.log("Received data:", data);
+  // Logging the incoming data for debugging
+  console.log("Received Data:", data);
 
   if (!data.hash) {
     console.log('Error: Missing hash in data.');
