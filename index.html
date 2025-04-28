@@ -73,15 +73,14 @@
     }
 
     try {
-      const params = new URLSearchParams(initDataRaw);
-      const response = await fetch('https://thonewathan-production.up.railway.app/auth?' + params.toString());
+      const response = await fetch('https://thonewathan-production.up.railway.app/auth?' + initDataRaw);
 
       if (response.ok) {
         const user = initDataUnsafe.user;
         card.innerHTML = `
           <img src="${user.photo_url || 'https://via.placeholder.com/80'}" alt="Profile Picture">
           <h1>${user.first_name} ${user.last_name || ''}</h1>
-          <p>@${user.username}</p>
+          <p>@${user.username || 'no username'}</p>
         `;
       } else {
         card.innerHTML = `<p>Authentication failed.</p>`;
