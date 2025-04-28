@@ -15,10 +15,10 @@ app.use(express.urlencoded({ extended: true }));
 // Function to check if the Telegram signature matches
 function checkTelegramAuth(data) {
   const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
-  
+
   const sortedKeys = Object.keys(data).filter(k => k !== 'hash').sort();
   const checkString = sortedKeys.map(k => `${k}=${data[k]}`).join('\n');
-  
+
   const hmac = crypto.createHmac('sha256', secret).update(checkString).digest('hex');
   return hmac === data.hash;
 }
@@ -26,7 +26,7 @@ function checkTelegramAuth(data) {
 app.get('/auth', (req, res) => {
   const data = req.query;
 
-  // Logging the incoming data for debugging
+  // Log incoming request data for debugging
   console.log("Received Data:", data);
 
   if (!data.hash) {
@@ -38,7 +38,7 @@ app.get('/auth', (req, res) => {
   if (checkTelegramAuth(data)) {
     console.log("Signature verified successfully.");
 
-    // Now it’s safe to parse the user data
+    // Now it's safe to parse the user data
     let userInfo = {};
     try {
       if (data.user) {
@@ -51,7 +51,11 @@ app.get('/auth', (req, res) => {
     }
 
     // Send a success message to the frontend
-    res.send(`Hello ${userInfo.first_name || 'User'}, you are authenticated!`);
+    res.send(`
+      <h1>Hello ${userInfo.first_name || 'User'}!</h1>
+      <p>Username: ${userInfo.username || 'N/A'}</p>
+      <img src="${userInfo.photo_url}" alt="Profile Picture" width="100" />
+    `);
   } else {
     console.log('Error: Authentication failed. Invalid signature.');
     res.status(403).send('Authentication failed.');
