@@ -8,46 +8,38 @@ const PORT = process.env.PORT || 3000;
 // Your Telegram Bot Token
 const BOT_TOKEN = "7907765042:AAGkCMUkVM7ZXh8sIjgbWDsIAD7IFchgafg";
 
-app.use(cors()); // Allow MiniApp frontend to call this
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Function to verify Telegram login initData
-function checkTelegramAuth(initData) {
-  const secretKey = crypto.createHash('sha256').update(BOT_TOKEN).digest();
-
-  const dataCheckString = Object.keys(initData)
-    .filter(key => key !== 'hash')
-    .sort()
-    .map(key => `${key}=${initData[key]}`)
-    .join('\n');
-
-  const hmac = crypto.createHmac('sha256', secretKey)
-    .update(dataCheckString)
-    .digest('hex');
-
-  return hmac === initData.hash;
+function checkTelegramAuth(data) {
+  const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+  
+  const sortedKeys = Object.keys(data).filter(k => k !== 'hash').sort();
+  const checkString = sortedKeys.map(k => `${k}=${data[k]}`).join('\n');
+  
+  const hmac = crypto.createHmac('sha256', secret).update(checkString).digest('hex');
+  return hmac === data.hash;
 }
 
-// Auth endpoint
 app.get('/auth', (req, res) => {
-  const { user, hash, ...otherFields } = req.query;
+  const data = req.query;
 
-  if (!user || !hash) {
-    return res.status(400).send("Missing required fields.");
+  if (!data.hash) {
+    return res.status(400).send('Missing hash.');
   }
 
-  const initData = { user, hash, ...otherFields };
-
-  if (checkTelegramAuth(initData)) {
-    const userInfo = JSON.parse(user);
-    res.send(`Hello ${userInfo.first_name}, you are authenticated!`);
+  if (checkTelegramAuth(data)) {
+    let userInfo = {};
+    if (data.user) {
+      userInfo = JSON.parse(data.user);
+    }
+    res.send(`Hello ${userInfo.first_name || 'User'}, you are authenticated!`);
   } else {
     res.status(403).send('Authentication failed.');
   }
 });
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
