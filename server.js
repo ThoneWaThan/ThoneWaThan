@@ -30,9 +30,14 @@ app.get('/auth', (req, res) => {
   }
 
   if (checkTelegramAuth(data)) {
+    // Now it's safe to parse user
     let userInfo = {};
     if (data.user) {
-      userInfo = JSON.parse(data.user);
+      try {
+        userInfo = JSON.parse(decodeURIComponent(data.user));
+      } catch (err) {
+        console.error('Failed to parse user data', err);
+      }
     }
     res.send(`Hello ${userInfo.first_name || 'User'}, you are authenticated!`);
   } else {
